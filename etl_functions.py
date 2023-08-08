@@ -6,6 +6,16 @@ import logging
 import config
 
 def extract_data(last_extracted_timestamp):
+    """
+    Extracts data from the WHO Global Health Observatory (GHO) API.
+
+    Args:
+        last_extracted_timestamp (str): Last extracted timestamp in 'YYYY-MM-DD' format.
+
+    Returns:
+        list of Element objects: The extracted data as a list of XML Element objects representing Observations.
+                                Returns None if there's an error during extraction or the API response is empty.
+    """
     api_url = f'https://apps.who.int/gho/athena/api/GHO/WHOSIS_000001?filter=COUNTRY:UGA&asof={last_extracted_timestamp}'
     try:
         response = requests.get(api_url)
@@ -27,6 +37,16 @@ def extract_data(last_extracted_timestamp):
         return None
 
 def process_data(data):
+    """
+    Processes the extracted data into a DataFrame.
+
+    Args:
+        data (list of Element objects): The extracted data as a list of XML Element objects representing Observations.
+
+    Returns:
+        pd.DataFrame or None: The processed data as a pandas DataFrame with columns 'timestamp', 'country_code', 'region', 'sex', and 'life_expectancy'.
+                              Returns None if the input data is None.
+    """
     if data is None:
         return None
 
@@ -51,6 +71,15 @@ def process_data(data):
     return df
 
 def ingest_data(dataframe):
+    """
+    Ingests the processed data into a PostgreSQL database.
+
+    Args:
+        dataframe (pd.DataFrame): The processed data as a pandas DataFrame.
+
+    Returns:
+        None
+    """
     try:
         conn = psycopg2.connect(config.DB_CONNECTION_STRING)
         cursor = conn.cursor()
@@ -86,6 +115,16 @@ def ingest_data(dataframe):
         logging.error("Error during data ingestion:", exc_info=True)
 
 def extract_and_process_data(last_extracted_timestamp):
+    """
+    Extracts and processes data from the WHO Global Health Observatory (GHO) API.
+
+    Args:
+        last_extracted_timestamp (str): Last extracted timestamp in 'YYYY-MM-DD' format.
+
+    Returns:
+        pd.DataFrame or None: The processed data as a pandas DataFrame with columns 'timestamp', 'country_code', 'region', 'sex', and 'life_expectancy'.
+                              Returns None if there's an error during extraction or the API response is empty.
+    """
     extracted_data = extract_data(last_extracted_timestamp)
 
     if extracted_data:

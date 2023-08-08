@@ -8,11 +8,26 @@ app = Flask(__name__, template_folder='templates')  # Set the templates folder
 # Custom filter function to format the timestamp as 'yyyy-mm'
 @app.template_filter('format_date')
 def format_date(value):
+    """
+    Custom Flask template filter to format the timestamp as 'yyyy-mm'.
+
+    Args:
+        value (datetime): The timestamp value to be formatted.
+
+    Returns:
+        str: The formatted timestamp as 'yyyy-mm'.
+    """
     return value.strftime('%Y-%m')
 
 
 @app.route('/')
 def index():
+    """
+    Flask route to handle the ETL pipeline.
+
+    Returns:
+        str: The rendered HTML template with the processed data.
+    """
     # Define the start_time before executing the ETL pipeline
     start_time = time.time()
 
@@ -42,7 +57,6 @@ def index():
     print(f"ETL pipeline completed in {elapsed_time:.2f} seconds.")
 
     return render_template('index.html', data=data)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
