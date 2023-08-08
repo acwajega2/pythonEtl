@@ -1,72 +1,37 @@
-  ![Zenysis](../logo.zenysis.png)
+# WHO GHO ETL Pipeline and Flask Web Application
 
-  # What are we looking for in a system integration engineer?
+This repository contains an ETL pipeline that extracts life expectancy data from the WHO Global Health Observatory (GHO) OData API, processes the data, and ingests it into a PostgreSQL database. Additionally, it includes a Flask web application to visualize the life expectancy data.
 
-  We are looking for backend engineering candidates that have worked on integrating software systems and are proficient in data structures and algorithms.
+## Setup Instructions
 
-  Now, before we start. Let's apply the algorithm of success:
+1. **Install Dependencies:**
+   - Make sure you have Python 3.x installed.
+   - Install the required Python packages by running: `pip install requests pandas psycopg2 Flask`
 
-  ```js
-  while(noSuccess) {
-      tryAgain();
-      if(Dead) {
-          break;
-      }
-  }
-  ```
+2. **Setup PostgreSQL Database:**
+   - Create a PostgreSQL database with the name `etl_db`.
+   - Make sure you have a PostgreSQL server running with the necessary credentials (`user=postgres`, `password=postgres`, `host=127.0.0.1`).
+   - Update the `DB_CONNECTION_STRING` variable in `config.py` with your PostgreSQL database credentials. Example: `postgresql://user:password@localhost:5432/etl_db`
 
-  # Assessment:
+3. **Clone the Repository:**
+   - Clone this repository to your local machine.
 
-  Build an ETL pipeline application that uses Python and a PostgreSQL database. The application should extract  data from the [GHO OData API](https://www.who.int/data/gho/info/gho-odata-api) and process that data in any way you see fit, finally ingesting that into the postgres database.
+4. **Run the ETL Pipeline:**
+   - Open a terminal and navigate to the repository directory.
+   - Execute the ETL pipeline using the following command: `python main.py`
 
-  ## What are we testing for in this assessment?
+5. **Run the Flask Web Application:**
+   - Once the ETL pipeline is completed, you can run the Flask web application.
+   - In the terminal, execute the following command: `python main.py`
+   - The Flask app will start, and you can access it in your web browser at `http://127.0.0.1:5000/` or `http://localhost:5000/`.
 
-  - Your skill as a back-end developer.
-  - Your ability to write readable and extendable code by following the right design principles.
-  - Your ability to transform data into a format that can support analysis.
-  - Your ability to think about a software product from end to end.
+## Additional Notes
 
-  ## Expectations
+- The ETL pipeline can be stopped and resumed using the last extracted timestamp, stored in the `last_extracted_timestamp.json` file. This feature allows the pipeline to pick up from the last successful extraction point in case of interruptions or resuming on subsequent runs.
+- Data validation and error handling have been implemented in the code to handle unexpected scenarios gracefully. In case of errors, check the logs in the terminal for error messages and consider enhancing the error handling in the code.
+- The ETL pipeline includes unit tests to verify the functionality of individual functions and the pipeline as a whole. The unit tests can be found in the `test_etl_functions.py` file.
+- The pipeline efficiently fetches only the most recent data from the WHO GHO API by using the `last_extracted_timestamp` parameter in the API query.
+- The PostgreSQL database table, `life_expectancy_data`, has been configured with a primary key constraint on `timestamp`, `region`, `country_code`, and `life_expectancy`. This ensures that duplicate records are prevented, and records are updated if they already exist in the database based on these unique constraints.
 
-  - Although we strive for perfection we don't expect everything to be perfect, **just do you**.
-  - Given the size of the assignment we don't expect everything to be done, **do what you can given the time**.
-  - We don't expect you to import the `WHO GHO OData API` data in any specific way, **use your own initiative**.
-  - We don't expect you to fetch all data sets, **choose the one you feel is the most important**.
-  - We don't expect professional graphs on the frontend, **a basic table will do**.
+- The Flask web application uses the `index.html` template located in the `templates` folder to render the life expectancy data. The data is passed to the template as a list of dictionaries and displayed using Jinja templating.
 
-  > The assignment should take about 3 hours to complete.
-
-  ## Requirements:
-
-  - Tech Stack
-    - [ ] Python backend
-    - [ ] Postgres database
-  - [ ] Data Validation
-  - [ ] Edge cases
-  - [ ] Define your approach testing and debugging 
-
-  ## Bonus Points:
-
-  - [ ] The pipeline can be stopped and resumed.
-  - [ ] The ability to re-run, only fetch the most recent data.
-  - [ ] The E of ETL can be stopped and resumed without need to restart the data pull from scratch.
-  - [ ] Setup instructions (README etc)
-  - [ ] Any form of tests (unit/functional)
-  - [ ] Additional suggestions if you had more time
-
-  ## Overview
-
-  Provide a brief written explanation (just a paragraph or so) of your work and decisions.
-
-  ## Demo
-
-  Add screenshots/recording of your project.
-
-  ## Hints
-
-  - Consider the intermediary data structures you would use in your application, and if possible comment on efficiency.
-  - A whole working product is more important than fetching all data sets.
-  - Clear and easy to understand setup instructions.
-  - Can you run this as-is on another OS?
-  - Keep it simple...
-  - Have fun!

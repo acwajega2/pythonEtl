@@ -1,30 +1,48 @@
 import time
 import config
 from etl_functions import extract_data, process_data, ingest_data
+from flask import Flask, render_template
 
-def main():
-    # Initialize the ETL pipeline
+app = Flask(__name__, template_folder='templates')  # Set the templates folder
+
+# Custom filter function to format the timestamp as 'yyyy-mm'
+@app.template_filter('format_date')
+def format_date(value):
+    return value.strftime('%Y-%m')
+
+
+@app.route('/')
+def index():
+    # Define the start_time before executing the ETL pipeline
     start_time = time.time()
 
-    # Fetch the last extracted timestamp from the database or a file
     last_extracted_timestamp = config.get_last_extracted_timestamp()
 
-    # Extract data from the GHO OData API
+    if last_extracted_timestamp is None:
+        print("No previous extraction found. Starting a fresh extraction.")
+    else:
+        print(f"Resuming from last extracted timestamp: {last_extracted_timestamp}")
+
+    # Extract data from the GHO API and ingest it into the database
     extracted_data = extract_data(last_extracted_timestamp)
 
     if extracted_data:
-        # Process the data
         processed_data = process_data(extracted_data)
+        if processed_data is not None and not processed_data.empty:
+            ingest_data(processed_data)
+            config.save_last_extracted_timestamp(processed_data['timestamp'].max())
+        else:
+            print("No new data to process or ingest.")
 
-        # Ingest data into PostgreSQL
-        ingest_data(processed_data)
+    # Convert processed_data DataFrame to a list of dictionaries
+    data = processed_data.to_dict(orient='records') if processed_data is not None else []
 
-        # Save the latest extracted timestamp for resumability
-        config.save_last_extracted_timestamp(processed_data['timestamp'].max())
-
-    # Finalize the ETL pipeline
+    # Calculate the elapsed time for the ETL pipeline
     elapsed_time = time.time() - start_time
     print(f"ETL pipeline completed in {elapsed_time:.2f} seconds.")
 
+    return render_template('index.html', data=data)
+
+
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

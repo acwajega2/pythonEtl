@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>Life Expectancy Data</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <h1 class="text-3xl font-bold mb-4 text-center">Life Expectancy Data</h1>
+
+    <!-- Add the chat options here -->
+    <div class="flex justify-center mb-4 space-x-4">
+        <label>
+            <input type="radio" name="sex" value="all" class="mr-1">
+            <span class="px-4 py-2 rounded-lg bg-blue-500 text-white cursor-pointer hover:bg-blue-600">All Sexes</span>
+        </label>
+        <label>
+            <input type="radio" name="sex" value="MLE" class="mr-1">
+            <span class="px-4 py-2 rounded-lg bg-green-500 text-white cursor-pointer hover:bg-green-600">Male</span>
+        </label>
+        <label>
+            <input type="radio" name="sex" value="FMLE" class="mr-1">
+            <span class="px-4 py-2 rounded-lg bg-pink-500 text-white cursor-pointer hover:bg-pink-600">Female</span>
+        </label>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table id="data-table" class="table-auto w-full bg-white shadow-md rounded-lg">
+            <thead>
+                <tr>
+                    <th class="bg-gray-100 border-b-2 px-4 py-2">Timestamp</th>
+                    <th class="bg-gray-100 border-b-2 px-4 py-2">Country Code</th>
+                    <th class="bg-gray-100 border-b-2 px-4 py-2">Region</th>
+                    <th class="bg-gray-100 border-b-2 px-4 py-2">Sex</th>
+                    <th class="bg-gray-100 border-b-2 px-4 py-2">Life Expectancy</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                {% if loop.index is divisibleby 2 %}
+                <tr class="bg-gray-100 hover:bg-blue-100">
+                {% else %}
+                <tr class="bg-white hover:bg-blue-100">
+                {% endif %}
+                    <td class="border px-4 py-2">{{ row.timestamp }}</td>
+                    <td class="border px-4 py-2">{{ row.country_code }}</td>
+                    <td class="border px-4 py-2">{{ row.region }}</td>
+                    <td class="border px-4 py-2">{{ row.sex }}</td>
+                    <td class="border px-4 py-2">{{ row.life_expectancy }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <!-- Add the table footer for the summary -->
+            <tfoot>
+                <tr>
+                    <td class="border px-4 py-2 font-semibold">Summary</td>
+                    <td class="border px-4 py-2"></td>
+                    <td class="border px-4 py-2"></td>
+                    <td class="border px-4 py-2" >Average Life Expectancy</td>
+                    <td id="summary-life-expectancy" class="border px-4 py-2 font-semibold"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div id="line-chart" class="mt-8 mx-auto"></div>
+
+    <script>
+        // Corrected JavaScript code for handling the sex filter
+        const dataRows = {{ data | tojson | safe }}; // Pass the data from Flask to JavaScript
+        function formatDate(dateStr) {
+            const dateObj = new Date(dateStr);
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
+        }
+        function updateTable() {
+            const selectedSex = document.querySelector('input[name="sex"]:checked').value;
+            const filteredData = selectedSex === 'all' ? dataRows : dataRows.filter(row => row.sex === selectedSex);
+
+            const tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            filteredData.forEach((row, index) => {
+                const newRow = tableBody.insertRow();
+                newRow.classList.add(index % 2 === 0 ? 'bg-gray-100' : 'bg-white', 'hover:bg-blue-100');
+
+                const timestampCell = newRow.insertCell();
+                timestampCell.textContent = formatDate(row.timestamp);
+
+                const countryCodeCell = newRow.insertCell();
+                countryCodeCell.textContent = row.country_code;
+
+                const regionCell = newRow.insertCell();
+                regionCell.textContent = row.region;
+
+                const sexCell = newRow.insertCell();
+                sexCell.textContent = row.sex;
+
+                const lifeExpectancyCell = newRow.insertCell();
+                lifeExpectancyCell.textContent = row.life_expectancy;
+            });
+
+            // Calculate and update the summary
+            const totalLifeExpectancy = filteredData.reduce((total, row) => total + row.life_expectancy, 0);
+            const averageLifeExpectancy = totalLifeExpectancy / filteredData.length;
+
+            document.getElementById("summary-life-expectancy").textContent = averageLifeExpectancy.toFixed(2);
+        }
+
+        // Call the updateTable function when the page loads and when the sex option changes
+        document.addEventListener('DOMContentLoaded', updateTable);
+        document.querySelectorAll('input[name="sex"]').forEach(input => {
+            input.addEventListener('change', updateTable);
+        });
+
+        // Line Chart
+        const categories = dataRows.map(data => formatDate(data.timestamp));
+        const values = dataRows.map(data => data.life_expectancy);
+
+        const options = {
+            chart: {
+                height: 400,
+                type: 'line',
+            },
+            series: [{
+                name: "Life Expectancy",
+                data: values,
+            }],
+            xaxis: {
+                categories: categories,
+            }
+        };
+
+        if (document.getElementById("line-chart") && typeof ApexCharts !== 'undefined') {
+            const lineChart = new ApexCharts(document.getElementById("line-chart"), options);
+            lineChart.render();
+        }
+    </script>
+</body>
+</html>
