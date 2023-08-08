@@ -35,3 +35,4 @@ This repository contains an ETL pipeline that extracts life expectancy data from
 
 - The Flask web application uses the `index.html` template located in the `templates` folder to render the life expectancy data. The data is passed to the template as a list of dictionaries and displayed using Jinja templating.
 
+![Alt text](image.png)
